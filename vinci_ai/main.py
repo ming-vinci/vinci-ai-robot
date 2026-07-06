@@ -1,8 +1,10 @@
 from vinci_ai.robot import Robot
+from vinci_ai.llm.openai_provider import OpenAIProvider
 
 
 def main():
-    robot = Robot()
+    llm_provider = OpenAIProvider()
+    robot = Robot(llm_provider)
 
     print("=== Vinci AI Robot ===")
     print("Type 'quit' or 'exit' to stop.")

@@ -1,10 +1,10 @@
-from vinci_ai.llm import OpenAIClient
+from vinci_ai.llm.base import LLMProvider
 from vinci_ai.prompts.system_prompt import SYSTEM_PROMPT
 
 
 class Robot:
-    def __init__(self):
-        self.llm = OpenAIClient()
+    def __init__(self, llm_provider: LLMProvider):
+        self.llm = llm_provider
         self.system_prompt = SYSTEM_PROMPT
         self.history = []
 
