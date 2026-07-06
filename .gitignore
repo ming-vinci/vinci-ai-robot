@@ -1,7 +1,20 @@
-.venv/
+# Python
 __pycache__/
 *.pyc
+
+# Virtual environment
+.venv/
+
+# Environment variables
 .env
+
+# Generated audio
+data/audio/*.wav
+
+# Generated images (if any)
+data/images/*.jpg
+data/images/*.png
+
 logs/
 .vscode/
 .DS_Store
