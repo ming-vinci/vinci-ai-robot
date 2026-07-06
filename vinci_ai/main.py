@@ -1,9 +1,9 @@
 from vinci_ai.robot import Robot
-from vinci_ai.llm.openai_provider import OpenAIProvider
+from vinci_ai.llm.factory import create_llm_provider
 
 
 def main():
-    llm_provider = OpenAIProvider()
+    llm_provider  = create_llm_provider()
     robot = Robot(llm_provider)
 
     print("=== Vinci AI Robot ===")
