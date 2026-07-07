@@ -1,17 +1,24 @@
 from vinci_ai.audio.recorder import AudioRecorder
+from vinci_ai.audio.player import AudioPlayer
 from vinci_ai.asr.base import ASRProvider
+from vinci_ai.tts.base import TTSProvider
 from vinci_ai.robot import Robot
 
 
 class VoiceAssistant:
+
     def __init__(
         self,
         recorder: AudioRecorder,
+        player: AudioPlayer,
         asr_provider: ASRProvider,
+        tts_provider: TTSProvider,
         robot: Robot,
     ):
         self.recorder = recorder
+        self.player = player
         self.asr = asr_provider
+        self.tts = tts_provider
         self.robot = robot
 
     def listen_once(self, duration_seconds: int = 5) -> str:
@@ -24,16 +31,13 @@ class VoiceAssistant:
         return user_text
 
     def respond_once(self, duration_seconds: int = 5) -> str:
-        user_text = self.listen_once(duration_seconds)
-
-        print()
-        print(f"You: {user_text}")
-        print()
+        user_text = self.listen_once()
 
         answer = self.robot.chat(user_text)
 
-        print("Robot:")
-        print(answer)
-        print()
+        audio_path = self.tts.synthesize(
+            answer,
+            "data/audio/output.wav"
+        )
 
-        return answer
+        self.player.play(audio_path)
