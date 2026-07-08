@@ -15,7 +15,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 # =========================
 
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openai")
-LLM_MODEL = os.getenv("LLM_MODEL", "gpt-5")
+LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4o-mini") # gpt-5
 
 
 # =========================

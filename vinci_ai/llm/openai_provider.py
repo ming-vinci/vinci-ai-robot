@@ -12,5 +12,7 @@ class OpenAIProvider(LLMProvider):
         response = self.client.chat.completions.create(
             model=LLM_MODEL,
             messages=messages,
+            max_tokens=40,
+            temperature=0.3,
         )
         return response.choices[0].message.content
