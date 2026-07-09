@@ -45,14 +45,16 @@ class VoiceAssistant:
 
         return user_text
 
-    def respond_once(self, duration_seconds: int = 5) -> str:
+    def respond_once(self) -> str:
         print("\n=== VoiceAssistant respond_once profiling ===")
         total_start = time.perf_counter()
 
         start = time.perf_counter()
-        audio_input_path = self.recorder.record_to_file(
+        audio_input_path = self.recorder.record_until_silence(
             output_path="data/audio/input.wav",
-            duration_seconds=duration_seconds,
+            silence_threshold=500,
+            silence_duration=1.0,
+            max_record_seconds=10.0,
         )
         record_time = time.perf_counter() - start
         print(f"Record audio: {record_time:.2f}s")
@@ -62,6 +64,10 @@ class VoiceAssistant:
         asr_time = time.perf_counter() - start
         print(f"ASR transcribe: {asr_time:.2f}s")
         print(f"User said: {user_text}")
+
+        if not user_text.strip():
+            print("No speech detected.")
+            return ""
 
         start = time.perf_counter()
         answer = self.robot.chat(user_text)
@@ -86,3 +92,14 @@ class VoiceAssistant:
         print(f"Total respond_once time: {total_time:.2f}s")
 
         return answer
+    
+    def run_forever(self):
+        print("Vinci is running. Press Ctrl+C to stop.")
+
+        try:
+            while True:
+                answer = self.respond_once()
+                print(f"Vinci: {answer}")
+
+        except KeyboardInterrupt:
+            print("\nVinci stopped.")

@@ -11,7 +11,11 @@ from vinci_ai.voice_assistant import VoiceAssistant
 
 def main():
 
-    recorder = AudioRecorder()
+    recorder = AudioRecorder(
+        device="plughw:2,0",
+        input_device_index=1,
+        sample_rate=48000,
+    )
 
     player = AudioPlayer()
 
@@ -31,7 +35,7 @@ def main():
         robot=robot,
     )
 
-    assistant.respond_once(duration_seconds=5)
+    assistant.run_forever()
 
 
 if __name__ == "__main__":
