@@ -40,4 +40,4 @@ TTS_VOICE = os.getenv("TTS_VOICE", "alloy")
 # AUDIO OUTPUT
 # =========================
 
-AUDIO_OUTPUT_DEVICE = os.getenv("AUDIO_OUTPUT_DEVICE", "plughw:0,0")  # Default to the first available audio output device
+AUDIO_OUTPUT_DEVICE = os.getenv("AUDIO_OUTPUT_DEVICE", "plughw:3,0")  # The USB speaker

@@ -7,6 +7,7 @@ class Robot:
         self.llm = llm_provider
         self.system_prompt = SYSTEM_PROMPT
         self.history = []
+        self.max_turns = 10
 
     def chat(self, user_message: str) -> str:
         messages = [
@@ -19,6 +20,9 @@ class Robot:
 
         self.history.append({"role": "user", "content": user_message})
         self.history.append({"role": "assistant", "content": answer})
+
+        # Keep last 10 conversation pairs = 20 messages
+        self.history = self.history[-2 * self.max_turns:]
 
         return answer
 
