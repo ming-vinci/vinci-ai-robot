@@ -15,6 +15,9 @@ data/audio/*.wav
 data/images/*.jpg
 data/images/*.png
 
+# Long-term memory files
+data/memory/*.json
+
 logs/
 .vscode/
 .DS_Store

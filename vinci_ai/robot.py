@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import base64
+import json
 import mimetypes
 from pathlib import Path
 
 from vinci_ai.prompts.system_prompt import SYSTEM_PROMPT
 from vinci_ai.llm.base import LLMProvider
+from vinci_ai.memory_store import MemoryStore
 from vinci_ai.vision.camera import RaspberryPiCamera
 
 
@@ -13,9 +15,14 @@ class Robot:
     def __init__(self, llm_provider: LLMProvider):
         self.llm = llm_provider
         self.system_prompt = SYSTEM_PROMPT
+        self.camera = RaspberryPiCamera()
+
+        # Short-term memory
         self.history: list[dict] = []
         self.max_turns = 10
-        self.camera = RaspberryPiCamera()
+        
+        # Long-term memory
+        self.memory_store = MemoryStore()
 
     def chat(self, user_message: str) -> str:
         """
@@ -24,10 +31,12 @@ class Robot:
         Vision is activated when the user's message contains one of
         the supported camera-related phrases.
         """
+        memory_text = self.memory_store.format_for_prompt()
+
         if self.should_use_vision(user_message):
-            messages = self.build_vision_messages(user_message)
+            messages = self.build_vision_messages(user_message, memory_text)
         else:
-            messages = self.build_text_messages(user_message)
+            messages = self.build_text_messages(user_message, memory_text)
 
         answer = self.llm.chat(messages)
 
@@ -51,11 +60,14 @@ class Robot:
         # Keep last 10 conversation pairs = 20 messages.
         self.history = self.history[-2 * self.max_turns:]
 
+        self.update_long_term_memory(user_message, answer)
+
         return answer
 
     def build_text_messages(
         self,
         user_message: str,
+        memory_text: str,
     ) -> list[dict]:
         """
         Build the normal text-only messages list.
@@ -64,6 +76,10 @@ class Robot:
             {
                 "role": "system",
                 "content": self.system_prompt,
+            },
+            {
+                "role": "system",
+                "content": memory_text,
             },
             *self.history,
             {
@@ -75,6 +91,7 @@ class Robot:
     def build_vision_messages(
         self,
         user_message: str,
+        memory_text: str,
     ) -> list[dict]:
         """
         Capture an image and build a multimodal messages list.
@@ -93,6 +110,10 @@ class Robot:
             {
                 "role": "system",
                 "content": self.system_prompt,
+            },
+            {
+                "role": "system",
+                "content": memory_text,
             },
             *self.history,
             {
@@ -177,6 +198,79 @@ class Robot:
         ).decode("utf-8")
 
         return f"data:{mime_type};base64,{encoded_image}"
+
+    def update_long_term_memory(self, user_message: str, assistant_answer: str) -> None:
+        current_memories = self.memory_store.load()
+
+        memory_update_messages = [
+            {
+                "role": "system",
+                "content": """
+                            You are responsible for maintaining long-term memory for a personal AI robot assistant.
+
+                            You will receive:
+                            1. The current long-term memories.
+                            2. The latest user message.
+                            3. The assistant's latest response.
+
+                            Your job is to return the complete updated long-term memory list.
+
+                            Rules:
+                            - Keep stable, useful facts about the user.
+                            - Examples: name, preferences, favorite things, work context, long-term projects, communication preferences.
+                            - Remove duplicates.
+                            - If the latest conversation updates or corrects an old memory, keep the newer information.
+                            - Do not store temporary facts, one-time questions, or random conversation details.
+                            - Do not store the assistant's own response unless it reveals something important about the user.
+                            - Return valid JSON only.
+                            - Do not include markdown.
+
+                            Required format:
+                            {
+                            "memories": [
+                                "The user's name is Ming."
+                            ]
+                            }
+
+                            If nothing should be remembered, return the current memories unchanged.
+                            """,
+            },
+            {
+                "role": "user",
+                "content": f"""
+                            Current long-term memories:
+                            {json.dumps(current_memories, ensure_ascii=False, indent=2)}
+
+                            Latest user message:
+                            {user_message}
+
+                            Assistant response:
+                            {assistant_answer}
+                            """,
+            },
+        ]
+
+        try:
+            raw_result = self.llm.chat(memory_update_messages)
+            parsed = json.loads(raw_result)
+
+            updated_memories = parsed.get("memories", [])
+
+            if isinstance(updated_memories, list):
+                cleaned_memories = [
+                    str(memory).strip()
+                    for memory in updated_memories
+                    if str(memory).strip()
+                ]
+
+                self.memory_store.save(cleaned_memories)
+
+                print("\n===== Long-term memory updated =====")
+                for memory in cleaned_memories:
+                    print(f"- {memory}")
+
+        except Exception as e:
+            print(f"Long-term memory update failed: {e}")
 
     def reset_history(self):
         self.history = []
