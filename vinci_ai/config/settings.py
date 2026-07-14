@@ -33,8 +33,16 @@ ASR_LANGUAGE = os.getenv("ASR_LANGUAGE", "en")
 
 TTS_PROVIDER = os.getenv("TTS_PROVIDER", "openai")
 TTS_MODEL = os.getenv("TTS_MODEL", "gpt-4o-mini-tts")
-TTS_VOICE = os.getenv("TTS_VOICE", "alloy")
-
+TTS_VOICE = os.getenv("TTS_VOICE", "alloy") # alloy and shimmer are male, coral and nova are female
+TTS_STYLE = os.getenv(
+    "TTS_STYLE",
+    (
+        "Speak as a cute, cheerful, youthful animated companion. "
+        "Use a light, bright voice, playful rhythm, expressive intonation, "
+        "and a slightly higher pitch. Sound energetic and friendly. "
+        "Do not sound deep, serious, mature, or formal."
+    ),
+)
 
 # =========================
 # AUDIO OUTPUT

@@ -2,7 +2,7 @@ from pathlib import Path
 
 from openai import OpenAI
 
-from vinci_ai.config.settings import OPENAI_API_KEY, TTS_MODEL, TTS_VOICE
+from vinci_ai.config.settings import OPENAI_API_KEY, TTS_MODEL, TTS_STYLE, TTS_VOICE
 from vinci_ai.tts.base import TTSProvider
 
 
@@ -20,6 +20,7 @@ class OpenAITTSProvider(TTSProvider):
             model=self.model,
             voice=self.voice,
             input=text,
+            instructions=TTS_STYLE,
             response_format="wav",
         ) as response:
             response.stream_to_file(str(output))
