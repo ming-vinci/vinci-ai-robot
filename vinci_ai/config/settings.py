@@ -49,3 +49,13 @@ TTS_STYLE = os.getenv(
 # =========================
 
 AUDIO_OUTPUT_DEVICE = os.getenv("AUDIO_OUTPUT_DEVICE", "plughw:2,0")  # The USB speaker
+
+
+# =========================
+# LONG TERM MEMORY
+# =========================
+
+ENABLE_LONG_TERM_MEMORY_UPDATE = (
+    os.getenv("ENABLE_LONG_TERM_MEMORY_UPDATE", "true").lower()
+    == "true"
+)

@@ -5,6 +5,7 @@ import json
 import mimetypes
 from pathlib import Path
 
+from vinci_ai.config.settings import ENABLE_LONG_TERM_MEMORY_UPDATE
 from vinci_ai.prompts.system_prompt import SYSTEM_PROMPT
 from vinci_ai.llm.base import LLMProvider
 from vinci_ai.memory_store import MemoryStore
@@ -60,7 +61,8 @@ class Robot:
         # Keep last 10 conversation pairs = 20 messages.
         self.history = self.history[-2 * self.max_turns:]
 
-        self.update_long_term_memory(user_message, answer)
+        if ENABLE_LONG_TERM_MEMORY_UPDATE:        
+            self.update_long_term_memory(user_message, answer)
 
         return answer
 
