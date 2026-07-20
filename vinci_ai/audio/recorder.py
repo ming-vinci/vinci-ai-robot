@@ -62,9 +62,6 @@ class AudioRecorder:
         print(f"Saved recording to {output}")
         return str(output)
 
-    def list_devices(self):
-        subprocess.run(["arecord", "-l"], check=True)
-
     def record_until_silence(
         self,
         output_path: str,

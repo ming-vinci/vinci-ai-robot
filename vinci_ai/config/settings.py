@@ -46,7 +46,7 @@ TTS_STYLE = os.getenv(
 
 
 # =========================
-# AUDIO OUTPUT
+# AUDIO INPUT
 # =========================
 
 AUDIO_INPUT_DEVICE = os.getenv(
@@ -64,7 +64,7 @@ AUDIO_INPUT_DEVICE_INDEX = int(
 AUDIO_SAMPLE_RATE = int(
     os.getenv(
         "AUDIO_SAMPLE_RATE",
-        "48000",
+        "16000",
     )
 )
 
