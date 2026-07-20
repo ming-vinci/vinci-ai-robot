@@ -44,11 +44,36 @@ TTS_STYLE = os.getenv(
     ),
 )
 
+
 # =========================
 # AUDIO OUTPUT
 # =========================
 
-AUDIO_OUTPUT_DEVICE = os.getenv("AUDIO_OUTPUT_DEVICE", "plughw:2,0")  # The USB speaker
+AUDIO_INPUT_DEVICE = os.getenv(
+    "AUDIO_INPUT_DEVICE",
+    "plughw:2,0",
+)
+
+AUDIO_INPUT_DEVICE_INDEX = int(
+    os.getenv(
+        "AUDIO_INPUT_DEVICE_INDEX",
+        "0",
+    )
+)
+
+AUDIO_SAMPLE_RATE = int(
+    os.getenv(
+        "AUDIO_SAMPLE_RATE",
+        "48000",
+    )
+)
+
+
+# =========================
+# AUDIO OUTPUT
+# =========================
+
+AUDIO_OUTPUT_DEVICE = os.getenv("AUDIO_OUTPUT_DEVICE", "plughw:3,0")  # The USB speaker
 
 
 # =========================
@@ -59,3 +84,20 @@ ENABLE_LONG_TERM_MEMORY_UPDATE = (
     os.getenv("ENABLE_LONG_TERM_MEMORY_UPDATE", "true").lower()
     == "true"
 )
+
+
+# =========================
+# VISION / CAMERA
+# =========================
+
+CAMERA_PROVIDER = os.getenv(
+    "CAMERA_PROVIDER",
+    "usb",
+)
+
+CAMERA_OUTPUT_DIRECTORY = os.getenv(
+    "CAMERA_OUTPUT_DIRECTORY",
+    "data/images",
+)
+
+USB_CAMERA_INDEX = int(os.getenv("USB_CAMERA_INDEX", "8"))

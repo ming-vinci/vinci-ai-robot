@@ -1,3 +1,5 @@
+from vinci_ai.config.settings import AUDIO_INPUT_DEVICE, AUDIO_INPUT_DEVICE_INDEX, AUDIO_SAMPLE_RATE
+
 from vinci_ai.audio.recorder import AudioRecorder
 from vinci_ai.audio.player import AudioPlayer
 
@@ -10,11 +12,10 @@ from vinci_ai.voice_assistant import VoiceAssistant
 
 
 def main():
-
     recorder = AudioRecorder(
-        device="plughw:2,0",
-        input_device_index=1,
-        sample_rate=48000,
+        device=AUDIO_INPUT_DEVICE,
+        input_device_index=AUDIO_INPUT_DEVICE_INDEX,
+        sample_rate=AUDIO_SAMPLE_RATE,
     )
 
     player = AudioPlayer()

@@ -4,8 +4,10 @@ import subprocess
 import time
 from pathlib import Path
 
+from vinci_ai.vision.camera.base import CameraProvider
 
-class RaspberryPiCamera:
+
+class RaspberryPiCameraProvider(CameraProvider):
     """Capture still images using Raspberry Pi Camera Module 3."""
 
     def __init__(
@@ -22,13 +24,7 @@ class RaspberryPiCamera:
         self.height = height
         self.timeout_ms = timeout_ms
 
-    def capture(self, filename: str | None = None) -> str:
-        """
-        Capture one JPEG image and return its path.
-
-        Uses rpicam-still, which has already been tested successfully
-        with the Raspberry Pi Camera Module 3.
-        """
+    def capture(self, filename: str | None = None) -> Path:
         if filename is None:
             timestamp = time.strftime("%Y%m%d_%H%M%S")
             filename = f"capture_{timestamp}.jpg"
@@ -59,19 +55,17 @@ class RaspberryPiCamera:
             )
         except FileNotFoundError as exc:
             raise RuntimeError(
-                "rpicam-still was not found. "
-                "Install Raspberry Pi camera applications first."
+                "rpicam-still was not found."
             ) from exc
         except subprocess.CalledProcessError as exc:
             error_message = exc.stderr.strip() or exc.stdout.strip()
             raise RuntimeError(
-                f"Camera capture failed: {error_message}"
+                f"Raspberry Pi camera capture failed: {error_message}"
             ) from exc
 
         if not output_path.exists():
             raise RuntimeError(
-                f"Camera command completed, but no image was created: "
-                f"{output_path}"
+                f"No image was created: {output_path}"
             )
 
-        return str(output_path)
+        return output_path

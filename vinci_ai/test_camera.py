@@ -1,13 +1,12 @@
-from vinci_ai.vision.camera import RaspberryPiCamera
+from vinci_ai.vision.camera.factory import create_camera_provider
 
 
 def main() -> None:
-    camera = RaspberryPiCamera()
+    camera = create_camera_provider()
 
-    print("Capturing image...")
-    image_path = camera.capture("camera_test.jpg")
+    image_path = camera.capture()
 
-    print(f"Image saved successfully: {image_path}")
+    print(f"Image captured successfully: {image_path}")
 
 
 if __name__ == "__main__":

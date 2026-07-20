@@ -6,22 +6,30 @@ import mimetypes
 from pathlib import Path
 
 from vinci_ai.config.settings import ENABLE_LONG_TERM_MEMORY_UPDATE
-from vinci_ai.prompts.system_prompt import SYSTEM_PROMPT
 from vinci_ai.llm.base import LLMProvider
 from vinci_ai.memory_store import MemoryStore
-from vinci_ai.vision.camera import RaspberryPiCamera
+from vinci_ai.prompts.system_prompt import SYSTEM_PROMPT
+from vinci_ai.vision.camera.base import CameraProvider
+from vinci_ai.vision.camera.factory import create_camera_provider
 
 
 class Robot:
-    def __init__(self, llm_provider: LLMProvider):
+    def __init__(
+        self,
+        llm_provider: LLMProvider,
+        camera_provider: CameraProvider | None = None,
+    ):
         self.llm = llm_provider
         self.system_prompt = SYSTEM_PROMPT
-        self.camera = RaspberryPiCamera()
+
+        # Use the supplied camera provider for testing or dependency injection.
+        # Otherwise, create the configured camera provider through the factory.
+        self.camera = camera_provider or create_camera_provider()
 
         # Short-term memory
         self.history: list[dict] = []
         self.max_turns = 10
-        
+
         # Long-term memory
         self.memory_store = MemoryStore()
 
@@ -35,9 +43,15 @@ class Robot:
         memory_text = self.memory_store.format_for_prompt()
 
         if self.should_use_vision(user_message):
-            messages = self.build_vision_messages(user_message, memory_text)
+            messages = self.build_vision_messages(
+                user_message,
+                memory_text,
+            )
         else:
-            messages = self.build_text_messages(user_message, memory_text)
+            messages = self.build_text_messages(
+                user_message,
+                memory_text,
+            )
 
         answer = self.llm.chat(messages)
 
@@ -58,11 +72,14 @@ class Robot:
             }
         )
 
-        # Keep last 10 conversation pairs = 20 messages.
-        self.history = self.history[-2 * self.max_turns:]
+        # Keep the last 10 conversation pairs = 20 messages.
+        self.history = self.history[-2 * self.max_turns :]
 
-        if ENABLE_LONG_TERM_MEMORY_UPDATE:        
-            self.update_long_term_memory(user_message, answer)
+        if ENABLE_LONG_TERM_MEMORY_UPDATE:
+            self.update_long_term_memory(
+                user_message,
+                answer,
+            )
 
         return answer
 
@@ -174,7 +191,7 @@ class Robot:
         )
 
     @staticmethod
-    def image_to_data_url(image_path: str) -> str:
+    def image_to_data_url(image_path: str | Path) -> str:
         """
         Convert a local image file to a Base64 data URL.
         """
@@ -182,12 +199,17 @@ class Robot:
 
         if not image_file.exists():
             raise FileNotFoundError(
-                f"Image file does not exist: {image_path}"
+                f"Image file does not exist: {image_file}"
+            )
+
+        if not image_file.is_file():
+            raise ValueError(
+                f"Image path is not a file: {image_file}"
             )
 
         if image_file.stat().st_size == 0:
             raise ValueError(
-                f"Image file is empty: {image_path}"
+                f"Image file is empty: {image_file}"
             )
 
         mime_type, _ = mimetypes.guess_type(image_file.name)
@@ -201,41 +223,49 @@ class Robot:
 
         return f"data:{mime_type};base64,{encoded_image}"
 
-    def update_long_term_memory(self, user_message: str, assistant_answer: str) -> None:
+    def update_long_term_memory(
+        self,
+        user_message: str,
+        assistant_answer: str,
+    ) -> None:
         current_memories = self.memory_store.load()
 
         memory_update_messages = [
             {
                 "role": "system",
                 "content": """
-                            You are responsible for maintaining long-term memory for a personal AI robot assistant.
+                You are responsible for maintaining long-term memory for a personal AI robot assistant.
 
-                            You will receive:
-                            1. The current long-term memories.
-                            2. The latest user message.
-                            3. The assistant's latest response.
+                You will receive:
+                1. The current long-term memories.
+                2. The latest user message.
+                3. The assistant's latest response.
 
-                            Your job is to return the complete updated long-term memory list.
+                Your job is to return the complete updated long-term memory list.
 
-                            Rules:
-                            - Keep stable, useful facts about the user.
-                            - Examples: name, preferences, favorite things, work context, long-term projects, communication preferences.
-                            - Remove duplicates.
-                            - If the latest conversation updates or corrects an old memory, keep the newer information.
-                            - Do not store temporary facts, one-time questions, or random conversation details.
-                            - Do not store the assistant's own response unless it reveals something important about the user.
-                            - Return valid JSON only.
-                            - Do not include markdown.
+                Rules:
+                - Keep stable, useful facts about the user.
+                - Examples: name, preferences, favorite things, work context,
+                long-term projects, and communication preferences.
+                - Remove duplicates.
+                - If the latest conversation updates or corrects an old memory,
+                keep the newer information.
+                - Do not store temporary facts, one-time questions, or random
+                conversation details.
+                - Do not store the assistant's own response unless it reveals
+                something important about the user.
+                - Return valid JSON only.
+                - Do not include markdown.
 
-                            Required format:
-                            {
-                            "memories": [
-                                "The user's name is Ming."
-                            ]
-                            }
+                Required format:
+                {
+                "memories": [
+                    "The user's name is Ming."
+                ]
+                }
 
-                            If nothing should be remembered, return the current memories unchanged.
-                            """,
+                If nothing should be remembered, return the current memories unchanged.
+                """.strip(),
             },
             {
                 "role": "user",
@@ -248,7 +278,7 @@ class Robot:
 
                             Assistant response:
                             {assistant_answer}
-                            """,
+                            """.strip(),
             },
         ]
 
@@ -258,21 +288,35 @@ class Robot:
 
             updated_memories = parsed.get("memories", [])
 
-            if isinstance(updated_memories, list):
-                cleaned_memories = [
-                    str(memory).strip()
-                    for memory in updated_memories
-                    if str(memory).strip()
-                ]
+            if not isinstance(updated_memories, list):
+                raise ValueError(
+                    "The memory update response must contain a "
+                    "'memories' list."
+                )
 
-                self.memory_store.save(cleaned_memories)
+            cleaned_memories = [
+                str(memory).strip()
+                for memory in updated_memories
+                if str(memory).strip()
+            ]
 
-                print("\n===== Long-term memory updated =====")
-                for memory in cleaned_memories:
-                    print(f"- {memory}")
+            self.memory_store.save(cleaned_memories)
 
-        except Exception as e:
-            print(f"Long-term memory update failed: {e}")
+            print("\n===== Long-term memory updated =====")
 
-    def reset_history(self):
+            for memory in cleaned_memories:
+                print(f"- {memory}")
+
+        except (json.JSONDecodeError, TypeError, ValueError) as error:
+            print(
+                "Long-term memory update returned an invalid response: "
+                f"{error}"
+            )
+        except Exception as error:
+            print(f"Long-term memory update failed: {error}")
+
+    def reset_history(self) -> None:
+        """
+        Clear the robot's short-term conversation history.
+        """
         self.history = []
