@@ -104,7 +104,7 @@ ENABLE_LONG_TERM_MEMORY_UPDATE = (
 
 CAMERA_PROVIDER = os.getenv(
     "CAMERA_PROVIDER",
-    "usb",
+    "raspberry_pi",
 )
 
 CAMERA_OUTPUT_DIRECTORY = os.getenv(
