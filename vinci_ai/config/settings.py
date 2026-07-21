@@ -68,6 +68,18 @@ AUDIO_SAMPLE_RATE = int(
     )
 )
 
+AUDIO_SILENCE_THRESHOLD = float(
+    os.getenv("AUDIO_SILENCE_THRESHOLD", "500")
+)
+
+AUDIO_SILENCE_DURATION = float(
+    os.getenv("AUDIO_SILENCE_DURATION", "1.0")
+)
+
+AUDIO_MAX_RECORD_SECONDS = float(
+    os.getenv("AUDIO_MAX_RECORD_SECONDS", "10.0")
+)
+
 
 # =========================
 # AUDIO OUTPUT

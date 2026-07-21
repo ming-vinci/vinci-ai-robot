@@ -1,4 +1,6 @@
 import time
+
+from vinci_ai.config.settings import AUDIO_SILENCE_THRESHOLD, AUDIO_SILENCE_DURATION, AUDIO_MAX_RECORD_SECONDS
 from vinci_ai.audio.recorder import AudioRecorder
 from vinci_ai.audio.player import AudioPlayer
 from vinci_ai.asr.base import ASRProvider
@@ -52,9 +54,9 @@ class VoiceAssistant:
         start = time.perf_counter()
         audio_input_path = self.recorder.record_until_silence(
             output_path="data/audio/input.wav",
-            silence_threshold=500,
-            silence_duration=1.0,
-            max_record_seconds=10.0,
+            silence_threshold=AUDIO_SILENCE_THRESHOLD,
+            silence_duration=AUDIO_SILENCE_DURATION,
+            max_record_seconds=AUDIO_MAX_RECORD_SECONDS,
         )
         record_time = time.perf_counter() - start
         print(f"Record audio: {record_time:.2f}s")
